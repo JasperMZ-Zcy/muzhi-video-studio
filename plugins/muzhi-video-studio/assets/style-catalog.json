@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": "2026-09-24.1",
+  "styles": [
+    {
+      "id": "editorial-illustration",
+      "name": "杂志插画",
+      "status": "production_ready",
+      "bestFor": "已经锁定杂志插画画风，或需要温度、人物情境与知识解释并重的口播片",
+      "entry": "skills/magazine-production/SKILL.md",
+      "qualityProfile": "skills/magazine-production/references/quality-contract.md"
+    },
+    {
+      "id": "archival-current-collage",
+      "name": "档案电流拼贴",
+      "status": "production_ready",
+      "bestFor": "靠物件接触、剪报关系、时间和因果推进的知识讲解",
+      "entry": "skills/video-production/references/archival-current-collage.md",
+      "qualityProfile": "skills/video-production/references/shared-quality.md"
+    }
+  ]
+}

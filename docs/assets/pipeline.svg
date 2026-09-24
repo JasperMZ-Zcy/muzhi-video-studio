@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="390" viewBox="0 0 1200 390" role="img" aria-labelledby="title desc">
-  <title id="title">杂志插画制作流程示意</title>
+  <title id="title">视频创作工作室共用流程示意</title>
   <desc id="desc">原创流程图，展示输入、计划、留额、生成回收、质检和交付的关系；不是产品截图。</desc>
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5 0 10z" fill="#c67a59"/></marker>
@@ -17,7 +17,7 @@
     <g transform="translate(235 152)">
       <rect width="138" height="124" rx="18" fill="#fff2d8" stroke="#e6b977"/>
       <path d="M48 30h43v29H48zM55 66h29" fill="none" stroke="#d95d45" stroke-width="5" stroke-linecap="round"/>
-      <text x="69" y="83" fill="#563d33" font-size="20" font-weight="700">计划与锁定</text><text x="69" y="107" fill="#80675b" font-size="14">故事板 · 版本指纹</text>
+      <text x="69" y="83" fill="#563d33" font-size="20" font-weight="700">计划与锁定</text><text x="69" y="107" fill="#80675b" font-size="14">风格 · 故事板</text>
     </g>
     <g transform="translate(415 152)">
       <rect width="138" height="124" rx="18" fill="#f9e4d8" stroke="#e6b977"/>

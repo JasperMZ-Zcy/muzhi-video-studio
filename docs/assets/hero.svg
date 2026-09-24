@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
-  <title id="title">牧之远见杂志插画制作工作流示意</title>
+  <title id="title">牧之远见视频创作工作室工作流示意</title>
   <desc id="desc">原创抽象纸张、质量检查和交付管线插图，不是产品界面截图。</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
@@ -33,7 +33,7 @@
   </g>
   <g transform="translate(684 130)">
     <text x="0" y="0" fill="#8b3a31" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="26" font-weight="700" letter-spacing="4">CODEX PLUGIN · WORKFLOW ILLUSTRATION</text>
-    <text x="0" y="75" fill="#35251f" font-family="Noto Serif SC, SimSun, serif" font-size="56" font-weight="700">杂志插画制作</text>
+    <text x="0" y="75" fill="#35251f" font-family="Noto Serif SC, SimSun, serif" font-size="56" font-weight="700">视频创作工作室</text>
     <text x="0" y="120" fill="#5c463d" font-family="Noto Sans SC, Microsoft YaHei, sans-serif" font-size="24">从真实输入到可审计交付的质量与成本边界</text>
     <g transform="translate(0 170)">
       <rect width="135" height="126" rx="18" fill="#fffdf8" stroke="#e4c9ad" stroke-width="2"/>

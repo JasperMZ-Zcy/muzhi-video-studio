@@ -61,7 +61,7 @@ class ProviderRouterTests(unittest.TestCase):
     def test_builtin_list_has_the_required_provider_modes(self) -> None:
         listed = router.list_providers()
         modes = {provider["id"]: provider["mode"] for provider in listed["providers"]}
-        self.assertEqual(modes, {"wan": "configured_api", "minimax": "configured_api", "google-flow": "manual"})
+        self.assertEqual(modes, {"local-h3": "local_workflow", "wan": "configured_api", "minimax": "configured_api", "google-flow": "manual"})
         google = next(provider for provider in listed["providers"] if provider["id"] == "google-flow")
         self.assertEqual(google["manual_delivery"], "first_frame_prompt_flatpack")
 

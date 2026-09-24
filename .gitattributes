@@ -1,4 +1,4 @@
 * text=auto eol=lf
 *.png binary
-plugins/muzhi-editorial-studio/assets/shotcraft/full-cards/** -text
-plugins/muzhi-editorial-studio/assets/shotcraft/cards/** -text
+plugins/muzhi-video-studio/assets/shotcraft/full-cards/** -text
+plugins/muzhi-video-studio/assets/shotcraft/cards/** -text

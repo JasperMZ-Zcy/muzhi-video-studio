@@ -1,14 +1,14 @@
 {
-  "name": "muzhi-editorial",
+  "name": "muzhi-video-studio",
   "interface": {
-    "displayName": "Muzhi Editorial"
+    "displayName": "Muzhi Video Studio"
   },
   "plugins": [
     {
-      "name": "muzhi-editorial-studio",
+      "name": "muzhi-video-studio",
       "source": {
         "source": "local",
-        "path": "./plugins/muzhi-editorial-studio"
+        "path": "./plugins/muzhi-video-studio"
       },
       "policy": {
         "installation": "AVAILABLE",

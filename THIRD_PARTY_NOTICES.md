@@ -2,14 +2,14 @@
 
 ## video-shotcraft recipe-card text
 
-`plugins/muzhi-editorial-studio/assets/shotcraft/full-cards/`, the accompanying
+`plugins/muzhi-video-studio/assets/shotcraft/full-cards/`, the accompanying
 fixed-source metadata, and `assets/shotcraft/LICENSE` include or describe
 text-only recipe cards from `Vincentwei1021/video-shotcraft` at commit
 `5f047c7cfe10d6616fe59160a750fcfaea510b2e`.
 
 Those recipe-card text files are provided under Apache License 2.0. The full
 Apache-2.0 text is retained at
-`plugins/muzhi-editorial-studio/assets/shotcraft/LICENSE`. Per-card source
+`plugins/muzhi-video-studio/assets/shotcraft/LICENSE`. Per-card source
 paths, fixed Git blob SHA-1 values, and source URLs are in
 `assets/shotcraft/full-index.json`.
 

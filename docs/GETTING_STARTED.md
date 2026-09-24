@@ -1,4 +1,4 @@
-# 快速开始
+# 牧之远见·视频创作工作室｜快速开始
 
 ## 先按你的情况沟通
 
@@ -20,8 +20,8 @@
 ## 安装与新任务接入
 
 ```bash
-codex plugin marketplace add JasperMZ-Zcy/muzhi-editorial-studio
-codex plugin add muzhi-editorial-studio@muzhi-editorial
+codex plugin marketplace add JasperMZ-Zcy/muzhi-video-studio
+codex plugin add muzhi-video-studio@muzhi-video-studio
 ```
 
 安装完成后新开任务。不要期待安装把正在进行的对话变成新工作流；插件中的 skills 会在新任务中按请求匹配。
@@ -31,9 +31,10 @@ codex plugin add muzhi-editorial-studio@muzhi-editorial
 可以这样说：
 
 ```text
-按杂志插画工作流制作一条新片。
+用视频创作工作室制作一条不露脸知识口播。先推荐适合本片的风格；
+也可以按我的选择使用“杂志插画”或“档案电流拼贴”。
 项目目录是 <PROJECT_ROOT>；我会提供经过授权的录音、文案和品牌资料。
-先给出最小计划和本轮需确认的供应商／预算边界。
+先给出最小计划，确认图生渠道和本轮预算边界。
 ```
 
 ### 接手旧项目
@@ -41,8 +42,8 @@ codex plugin add muzhi-editorial-studio@muzhi-editorial
 可以这样说：
 
 ```text
-继续 <PROJECT_ROOT> 里的杂志插画项目。
-先读 HANDOFF.md、artifacts/editorial-job-card.md、project.json 和插件状态；
+继续 <PROJECT_ROOT> 里的视频项目。
+先读 HANDOFF.md、已锁定的设计和素材、插件状态与风格状态；
 保留已通过的录音、字幕、镜头和时间线，只处理第一个真实未完成阶段。
 ```
 
@@ -50,13 +51,17 @@ codex plugin add muzhi-editorial-studio@muzhi-editorial
 
 ```bash
 python <PLUGIN_ROOT>/scripts/project_state.py status --project <PROJECT_ROOT>
+python <PLUGIN_ROOT>/scripts/style_registry.py catalog
+python <PLUGIN_ROOT>/scripts/style_registry.py status --project <PROJECT_ROOT>
 python <PLUGIN_ROOT>/scripts/provider_router.py status --project <PROJECT_ROOT>
 python <PLUGIN_ROOT>/scripts/generation_ledger.py status --project <PROJECT_ROOT>
 ```
 
-`<PLUGIN_ROOT>` 表示安装后仓库中的 `plugins/muzhi-editorial-studio` 目录；`<PROJECT_ROOT>` 是你明确授权处理的项目目录。它们是可移植占位符，不是要原样创建的目录名。
+`<PLUGIN_ROOT>` 表示安装后仓库中的 `plugins/muzhi-video-studio` 目录；`<PROJECT_ROOT>` 是你明确授权处理的项目目录。它们是可移植占位符，不是要原样创建的目录名。
 
-## 新知识片先选画面路线
+新项目先选择一种主风格：`editorial-illustration`（杂志插画）或 `archival-current-collage`（档案电流拼贴）。风格会锁在当前项目中，不跟图生渠道绑在一起。旧杂志项目按原有状态续作；即使没有插件状态，只要目录里已有项目材料，也要先核对资产与设计，不能当作空白新片重选画风。档案电流拼贴通过的是风格层试镜，正式片的每个动作和文字仍需逐镜检查；公开展示的那段试镜有一处关系线偏早，不把它当正式镜头范本。
+
+## 选定风格，再安排每段画面
 
 导演板前，把已确认的口播、现有证据和本片设计资料交给 Codex。它会按段落判断观众需要看见什么。
 
@@ -64,7 +69,7 @@ python <PLUGIN_ROOT>/scripts/generation_ledger.py status --project <PROJECT_ROOT
 - 比较、步骤、因果和概念解释可以检索知识动效配方。
 - 院校招生简章、政策条款和精确数字用真实出处、局部放大和高亮来讲，不能交给图生模型重写。
 
-图生画面和知识动效都应跟随当前项目的 `design.md`。它们共用人物或插画语言、色板、字体、纸张材质、构图、字幕槽和运动节奏。设计有改动时，只复核受影响镜头，已锁定的录音、素材和通过的内容继续保留。
+图生画面和知识动效都应跟随当前项目的 `design.md`。它们共用本片选定的视觉语言、色板、字体、材质、构图、字幕槽和运动节奏；杂志插画的独有画风不会强加给档案电流拼贴。设计有改动时，只复核受影响镜头，已锁定的录音、素材和通过的内容继续保留。
 
 镜头库提供 157 张配方与 214 种样式线索，方便少从零开始想镜头。它不代替导演判断，也不保证任何项目自动适配。详细说明见[知识解释镜头库](SHOT_LIBRARY.md)。
 
@@ -73,7 +78,7 @@ python <PLUGIN_ROOT>/scripts/generation_ledger.py status --project <PROJECT_ROOT
 ![工作流管线示意](assets/pipeline.svg)
 
 1. 明确本轮目标、可修改范围、必须保留项、预算和是否允许公开发布。
-2. 读取现有状态与对应阶段的质量合同；已有项目从第一个未完成阶段继续。
+2. 读取现有状态、风格锁与对应质量合同；新片先选风格，已有项目从第一个未完成阶段继续。
 3. 为未提交的图生视频选择渠道，并把真实授权范围记录在项目里。
 4. 生成前用成本台账 `plan` 和 `reserve`，外部平台返回任务 ID 后再 `attach`。
 5. 回收文件先核 SHA、时长、画幅、帧率与音轨，再进入统一剪辑合同。

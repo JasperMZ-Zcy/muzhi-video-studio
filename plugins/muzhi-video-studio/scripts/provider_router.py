@@ -51,6 +51,7 @@ FORBIDDEN_REFERENCE_TERMS = (
 
 
 BUILTIN_REGISTRY: Tuple[Dict[str, Any], ...] = (
+    {"id": "local-h3", "name": "Local ComfyUI / MiniMax-H3", "mode": "local_workflow"},
     {"id": "wan", "name": "Wan", "mode": "configured_api"},
     {"id": "minimax", "name": "MiniMax", "mode": "configured_api"},
     {
