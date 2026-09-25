@@ -7,6 +7,7 @@ Run with: python scripts/test_project_state.py
 from __future__ import annotations
 
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -215,6 +216,29 @@ class ProjectStateTests(unittest.TestCase):
             state.package_files(self.root, manifest, destination)
         self.assertFalse((destination / "script.txt").exists())
         self.assertEqual((destination / "cover.png").read_bytes(), b"old cover")
+
+    def test_package_does_not_replace_file_created_after_preflight(self) -> None:
+        self.write("one/cover.png", b"new cover")
+        destination = Path(self.temporary.name) / "delivery"
+        destination.mkdir()
+        real_link = os.link
+
+        def competing_create(source: Path, target: Path) -> None:
+            target.write_bytes(b"other worker's cover")
+            real_link(source, target)
+
+        with patch.object(state.os, "link", side_effect=competing_create):
+            with self.assertRaisesRegex(state.ValidationError, "destination changed"):
+                state.package_files(self.root, json.dumps(["one/cover.png"]), destination)
+        self.assertEqual((destination / "cover.png").read_bytes(), b"other worker's cover")
+
+    def test_package_adds_file_to_existing_directory_without_overwrite(self) -> None:
+        self.write("one/cover.png", b"new cover")
+        destination = Path(self.temporary.name) / "delivery"
+        destination.mkdir()
+        result = state.package_files(self.root, json.dumps(["one/cover.png"]), destination)
+        self.assertEqual(result["copied"], ["cover.png"])
+        self.assertEqual((destination / "cover.png").read_bytes(), b"new cover")
 
     def test_package_is_flat_and_rejects_outside_and_secret_paths(self) -> None:
         self.write("renders/preview.mp4", b"video")

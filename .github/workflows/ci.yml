@@ -16,16 +16,7 @@ jobs:
       - name: Run local contract and negative tests
         working-directory: plugins/muzhi-video-studio
         run: |
-          python scripts/test_project_state.py
-          python scripts/test_provider_router.py
-          python scripts/test_production_runner.py
-          python scripts/test_generation_ledger.py
-          python scripts/test_shotcraft_catalog.py
-          python scripts/test_motion_plan.py
-          python scripts/test_shotcraft_style.py
-          python scripts/test_public_shotcraft_release.py
-          python scripts/test_style_registry.py
-          python scripts/test_local_h3_adapter.py
+          python -m unittest discover -s scripts -p 'test_*.py' -v
           python scripts/verify_rule_coverage.py
           python vendor/editorial-magazine-explainer-producer/scripts/test_director_storyboard.py
           python vendor/editorial-magazine-explainer-producer/scripts/test_dynamic_asset_duration.py

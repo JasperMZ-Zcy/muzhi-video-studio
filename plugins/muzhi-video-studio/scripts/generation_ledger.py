@@ -100,7 +100,8 @@ def _project_dir(project: str | Path) -> Path:
 
 def _state_dir(project: str | Path) -> Path:
     directory = _project_dir(project) / ARTIFACTS_DIR
-    if directory.is_symlink():
+    if (directory.is_symlink() or getattr(directory, "is_junction", lambda: False)()
+            or (directory.exists() and directory.resolve() != directory.absolute())):
         raise ValidationError("artifacts directory must not be a symlink")
     if directory.exists() and not directory.is_dir():
         raise ValidationError("artifacts path must be a directory")

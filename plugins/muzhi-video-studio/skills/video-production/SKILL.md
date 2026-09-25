@@ -24,7 +24,7 @@ description: 牧之远见·视频创作工作室的多风格入口。用户要�
 
 按[共用流程](references/shared-pipeline.md)推进：真实问题和证据 → 已确认口播/本人录音 → 导演理解 → 风格版`design.md` → 导演前镜头路线 → 有声动态分镜 → 最难真实样片 → 批量镜头 → 音画合成 → 质检 → 发布包 → 真实发布与数据回流。只读当前阶段必要参考；旧项目已完成的阶段不重跑。用户要局部返工时只影响对应资产，原素材、哈希和历史版本保留。
 
-导演板**之前**把口播段落分到`image_to_video`、`native_mg`、`official_evidence`、`sourced_chart`、`vox_layered_broll`、`real_media`或`hybrid`。实际需要真实人物/器物动作才进入图生视频；官方学校信息、数字和图表用可核来源和本地准确排版，不能让模型画伪字。Shotcraft镜头库按语义检索，改造成所选风格，不让解释段退化成截图或PPT。每镜写明进入、接触/变化、结果、退出、衔接和真实口播时码。
+导演板**之前**把口播段落分到`image_to_video`、`native_mg`、`official_evidence`、`sourced_chart`、`vox_layered_broll`、`real_media`或`hybrid`。实际需要真实人物/器物动作才进入图生视频；官方学校信息、数字和图表用可核来源和本地准确排版，不能让模型画伪字。新片解释镜头先核外部 Agent Motion 是否已安装且有本项目使用范围依据；具备条件时按[Agent Motion 接入合同](references/agent-motion.md)读索引、选例并留下可见动作的样片证据。尚未安装、缺使用依据或不适合时，说明本片不启用它，继续用 Shotcraft 或原创本地动效，不让可选后端卡住主产线；用户明确只要该后端时才停在相应缺口。它不新增风格、不代替`visual_route`或图生供应商，旧项目不自动改动。Shotcraft镜头库按语义检索，改造成所选风格，不让解释段退化成截图或PPT。每镜写明进入、接触/变化、结果、退出、衔接和真实口播时码。
 
 图生渠道逐项目确认：本地ComfyUI/MiniMax-H3、WAN/MiniMax云API、Google Flow手动首帧/提示词包，或用户新指定平台都可接。已锁旧片不因插件更新换供应商；切换只影响尚未提交的镜头，不重交已付费任务。渠道输出统一为本地镜头文件、实际时长、任务/素材哈希和质检状态后再合成。具体执行复用`../magazine-production/references/video-provider-routing.md`，其中渠道合同可跨风格使用，杂志独有画风要求不跨风格继承。本机H3仅在实际选用时读`../magazine-production/references/local-h3.md`并先预检，不保证环境或速度。
 

@@ -73,6 +73,8 @@ python <PLUGIN_ROOT>/scripts/generation_ledger.py status --project <PROJECT_ROOT
 
 镜头库提供 157 张配方与 214 种样式线索，方便少从零开始想镜头。它不代替导演判断，也不保证任何项目自动适配。详细说明见[知识解释镜头库](SHOT_LIBRARY.md)。
 
+v2.1 还可以使用独立准备的 Agent Motion 后端：先完整理解 SRT，再借选中案例的运动机制服务本片画面。上游源码、运行环境和使用许可不随插件提供；没有它时仍沿用上述流程。详见[Agent Motion 接入](AGENT_MOTION.md)。
+
 ## 推荐的最小流程
 
 ![工作流管线示意](assets/pipeline.svg)

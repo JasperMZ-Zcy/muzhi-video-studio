@@ -1,6 +1,6 @@
 {
   "name": "muzhi-video-studio",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "面向不露脸知识口播的可选风格视频工作室：从判断、口播和导演板到镜头生成、合成、质检与交付。",
   "author": {"name": "牧之远见"},
   "skills": "./skills/",

@@ -105,7 +105,8 @@ def _state_dir(project: str | Path) -> Path:
     directory = _project_dir(project) / ARTIFACTS_DIR
     # State is deliberately confined to the project. Do not follow a user or
     # legacy symlink named "artifacts" into another location for a write.
-    if directory.is_symlink():
+    if (directory.is_symlink() or getattr(directory, "is_junction", lambda: False)()
+            or (directory.exists() and directory.resolve() != directory.absolute())):
         raise ValidationError("artifacts directory must not be a symlink")
     if directory.exists() and not directory.is_dir():
         raise ValidationError("artifacts path must be a directory")
@@ -749,7 +750,13 @@ def package_files(project: str | Path, manifest: str, destination: str | Path) -
             staging = None  # type: ignore[assignment]
         else:
             for _, basename, _ in to_copy:
-                os.replace(staging / basename, target_path / basename)
+                # The destination may change after preflight. A hard link is a
+                # same-volume, create-only commit; os.replace could overwrite a
+                # file another worker created in that interval.
+                try:
+                    os.link(staging / basename, target_path / basename)
+                except FileExistsError as exc:
+                    raise ValidationError("destination changed while packaging: " + basename) from exc
         return {
             "destination": str(target_path),
             "files": [basename for _, _, basename, _, _ in staged],

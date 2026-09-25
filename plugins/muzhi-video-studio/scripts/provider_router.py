@@ -98,7 +98,8 @@ def _project_dir(project: str | Path) -> Path:
 
 def _state_path(root: Path) -> Path:
     artifacts = root / "artifacts"
-    if artifacts.is_symlink():
+    if (artifacts.is_symlink() or getattr(artifacts, "is_junction", lambda: False)()
+            or (artifacts.exists() and artifacts.resolve() != artifacts.absolute())):
         raise RouterError("artifacts directory must not be a symlink")
     if artifacts.exists() and not artifacts.is_dir():
         raise RouterError("artifacts path must be a directory")

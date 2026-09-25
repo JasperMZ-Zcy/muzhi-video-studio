@@ -56,7 +56,9 @@ def project_path(value: str) -> Path:
 
 def lock_path(project: Path) -> Path:
     artifacts = project / "artifacts"
-    if artifacts.is_symlink() or (artifacts.exists() and not artifacts.is_dir()):
+    if (artifacts.is_symlink() or getattr(artifacts, "is_junction", lambda: False)()
+            or (artifacts.exists() and artifacts.resolve() != artifacts.absolute())
+            or (artifacts.exists() and not artifacts.is_dir())):
         raise StyleError("artifacts must be a local directory, not a link or file")
     return artifacts / LOCK_NAME
 

@@ -23,3 +23,15 @@ No upstream preview video, audio, gallery media, demo implementation, template,
 dependency tree, or upstream Skill is included by this release. Gallery URLs in
 the index are live reference links only; they are not pinned or locally verified
 media.
+
+## Agent Motion optional external integration
+
+The independently authored bridge and workflow refer to
+`erduo1998-cell/agent-motion` at commit
+`a379a68040b9cb397be3ca4f199201686b673b40`.
+No Agent Motion source code, Skills, case-analysis text, original videos,
+runtime dependencies or models are distributed here. Users obtain that
+project separately and must follow its actual license and secure permission
+for their intended use. This repository's MIT license does not grant rights
+to that external project. A local user's account of permission is not a
+transferable commercial or redistribution license for downstream users.
