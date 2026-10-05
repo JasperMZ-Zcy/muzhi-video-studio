@@ -20,9 +20,24 @@ This notice does not relicense the rest of this repository. The repository's
 top-level MIT license continues to apply only where its own terms apply.
 
 No upstream preview video, audio, gallery media, demo implementation, template,
-dependency tree, or upstream Skill is included by this release. Gallery URLs in
-the index are live reference links only; they are not pinned or locally verified
-media.
+dependency tree, or upstream Skill is included by this release. Publicly
+authored observation notes may describe bounded browser playback or sampled
+source-media frames, with URLs and hashes as provenance. Those notes do not
+redistribute the media, establish full normal-speed review, or prove that a
+Gallery MP4 was rendered from the pinned TSX source. Gallery links may change.
+
+## Authored style-board image
+
+`plugins/muzhi-video-studio/assets/style-boards/archival-current-education-hero.png`
+is a locally generated, education-themed static style illustration. Its source
+record identifies the result by SHA-256
+`03A347B065C4DBBD3064CD5141EF968435D9DE5DAAAAAF11F69C687F1A4BABEA`;
+the same bytes are included here. A user-supplied chip-explainer frame was
+used only as a palette, texture, and layering reference during generation;
+its people, subject, logo, and composition were not requested for reproduction.
+The original reference frame is not included. This illustration is a visual
+direction, not an independently reviewed animated shot or a claim about actual
+student study time.
 
 ## Agent Motion optional external integration
 

@@ -11,11 +11,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       - name: Install local media test dependency
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Install locked local syntax-test dependencies
+        working-directory: plugins/muzhi-video-studio
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Run local contract and negative tests
         working-directory: plugins/muzhi-video-studio
         run: |
+          npm run test:mechanisms
           python -m unittest discover -s scripts -p 'test_*.py' -v
           python scripts/verify_rule_coverage.py
           python vendor/editorial-magazine-explainer-producer/scripts/test_director_storyboard.py

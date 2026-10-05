@@ -1,13 +1,13 @@
 {
   "release_scope": "public-source-reference-only",
-  "included": "157 Apache-2.0 text recipe cards, fixed-source index, six reviewed reference records, and generic local component source",
-  "excluded": "all upstream or local media, audio, fonts, demos, full Skills, project receipts, credentials, profiles, browser data, private paths, and historical project output",
+  "included": "157 Apache-2.0 text recipe cards, fixed-source index, six reviewed reference records, generic local component source, and locally authored notes on 227 pinned source files plus bounded observations of 214 Gallery styles",
+  "excluded": "all upstream or local media, source-PTS sheets, audio, fonts, demo JSX, full upstream Skills, project receipts, credentials, profiles, browser data, private paths, and historical project output",
   "rights_review": {
     "status": "approved-for-public-source-distribution",
     "rights": "pass: source text is covered by Apache-2.0 with license and notices retained",
-    "privacy": "pass: source package contains no personal, account, device, or project-private data",
-    "portability": "pass: text cards and generic source can be read without private services",
-    "context": "pass: mechanism references only, never preapproved factual, visual, provider, or publication output"
+    "privacy": "pass: source package and authored study metadata contain no personal, account, device, or project-private data",
+    "portability": "pass: text cards, generic source and self-contained notes can be read without private services or research files",
+    "context": "pass: sampled Gallery observations do not prove full-speed viewing, source/video same-version identity, or preapproved factual, visual, provider, or publication output"
   },
   "public_export_eligible": true,
   "project_output_approved": false

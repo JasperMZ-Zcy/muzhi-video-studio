@@ -1,10 +1,12 @@
 import copy,hashlib,tempfile,unittest
 from pathlib import Path
+from unittest.mock import patch
 from motion_plan import validate
 
 class RoutePlanTests(unittest.TestCase):
  def setUp(self):
   self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name);self.addCleanup(self.tmp.cleanup)
+  legacy=patch('project_policy.classify_project',return_value={'kind':'legacy','minimum_semantic_version':1,'reason':'verified old fixture'});legacy.start();self.addCleanup(legacy.stop)
   (self.root/'script.txt').write_text('先比较条件',encoding='utf-8');(self.root/'design.md').write_text('本片采用统一风格',encoding='utf-8')
   self.plan={'source_script':'script.txt','source_sha256':hashlib.sha256((self.root/'script.txt').read_bytes()).hexdigest(),'style_intent':'统一纸张和人物语言','segments':[{'id':'s1','spoken_text':'先比较条件','audience_takeaway':'同口径比较','visual_route':'native_mg','reason':'需要看懂关系','visual_action':'两列条件逐项对齐','library_candidates':['list-reveal'],'requires_exact_information':False,'evidence':[],'reading_plan':'关键项落位后留阅读时间','handoff':'比较项变成下一镜证据标签'}]}
  def test_pre_before_design_is_allowed(self):self.assertTrue(validate(self.plan,self.root)['passed'])

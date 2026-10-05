@@ -1,0 +1,78 @@
+{
+  "asset_id": "muzhi-semantic-actions-public-v1",
+  "title": "可按项目输入改造的关系动效源码",
+  "asset_type": "react-remotion-source-component",
+  "source_project": "locally-authored-generic-source",
+  "availability": "source_only_project_adaptation_required",
+  "rights": {
+    "status": "cleared-for-public-source",
+    "notes": "七个文件为本项目原创通用源码；没有上游 demo JSX、媒体、字体、真实学校资料或私人项目输入。公开的是源码，不是镜头成片使用许可。"
+  },
+  "public_export_eligible": true,
+  "search_text": "列表同物迁移 焦点交棒 闭合轮廓 极坐标 颗粒单位 相机光标同世界 停滚 堆叠分母 折线端点 贝塞尔弧长",
+  "tags": ["stable-object", "focus-handoff", "star-shaped-contour", "discrete-count", "shared-camera", "chart-geometry", "path-arc"],
+  "reuse_conditions": [
+    "先核本片原意、数据来源和许可，再绑定项目源码/参数/有权视觉层；本记录不自带事实或媒体。",
+    "组件和纯函数的输入、反例各自独立；主 Composition 真实调用、同版媒体与手机尺度阅读另行检查。",
+    "纯函数 SceneCoordinate、ChartGeometry、PathArc 不提供 JSX 镜头；第三方源图、音频及字体不随本包。"
+  ],
+  "dependencies": ["使用者自有的 React/Remotion 运行时；纯函数可由现有 TypeScript 工程调用"],
+  "entries": [
+    {
+      "id": "semantic_action:RowCanvasTransfer", "path": "src/RowCanvasTransfer.tsx",
+      "sha256": "4E9166F220DFCDDFD1B9FEF819C14586AB3564921695BBF7F258359CA9358513",
+      "search_text": "列表 行 卡片 同一对象 迁移 画布 空槽 弧线",
+      "input_contract": "Caller supplies frame, stable 1-12 item IDs, source/target rectangles and ordered check/depart/arrive frames; optional project-owned visual ReactNode has one instance throughout flight.",
+      "bad_fit": "不是复制、自动归类或真实来源取得；原槽与目标不能同时各算一个对象。",
+      "availability": "source_only_project_adaptation_required", "public_export_eligible": true
+    },
+    {
+      "id": "semantic_action:FocusHandoff", "path": "src/FocusHandoff.tsx",
+      "sha256": "7FDE3B3C6043316DD680036CB6E956907B0306BC7ED6931F760D1AB97C13DE61",
+      "search_text": "相邻镜 虚焦 焦点交棒 景深 旧层退场 新层停读",
+      "input_contract": "Caller binds two distinct visual nodes/IDs and ordered hold/enter/exit/settle local frames.",
+      "bad_fit": "焦点交换不证明两个来源同一、已经读懂或完成页面导航。",
+      "availability": "source_only_project_adaptation_required", "public_export_eligible": true
+    },
+    {
+      "id": "semantic_action:PolarContourMorph", "path": "src/PolarContourMorph.tsx",
+      "sha256": "4A4AC12C6AF394B540CF24F2D717114A51AC356CF9773D774335907A0C68C22F",
+      "search_text": "同一闭合轮廓 极坐标 星形 SVG 形变",
+      "input_contract": "Equal 16-256 positive radial samples around one center and ordered morph/read frames; only one simple star-shaped closed contour.",
+      "bad_fit": "有孔、C形、自相交、多主体或任意 SVG 路径不适配。",
+      "availability": "source_only_project_adaptation_required", "public_export_eligible": true
+    },
+    {
+      "id": "semantic_action:CountParticleFill", "path": "src/CountParticleFill.tsx",
+      "sha256": "EE3D02F3A837654471E8A417A5E5DDB4A7221F667B77053EC50C6829C95C1745",
+      "search_text": "有单位颗粒 落体筑柱 整数件数 分母 总量",
+      "input_contract": "1-5 stable columns; integer values divisible by a positive particleValue; at most 200 grains; explicit unit, basis, dataStatus and source SHA for measured data. Optional layout:'unit-columns' needs at least 680x600 and at most 12 grains per column; omission keeps classic output.",
+      "bad_fit": "不能以不整除或无来源数值粒化；每粒≈多人不能说成每粒一人。",
+      "availability": "source_only_project_adaptation_required", "public_export_eligible": true
+    },
+    {
+      "id": "semantic_action:SceneCoordinate", "path": "src/SceneCoordinate.ts",
+      "sha256": "9C76278320403C939F81D5070D04EF4DF69A0367B0BED50E1E3C893B1A004DFB",
+      "search_text": "同世界坐标 目标框 相机 光标逆缩放 滚动上限 制动 停位",
+      "input_contract": "Pure helper exports cameraAt/validateCameraMove and scrollBrakeAt/validateScrollBrake; caller applies the transform to project-owned visuals.",
+      "bad_fit": "不抓网页、不画原页，也不证明真实点击或观众已读。",
+      "availability": "source_only_project_adaptation_required", "public_export_eligible": true
+    },
+    {
+      "id": "semantic_action:ChartGeometry", "path": "src/ChartGeometry.ts",
+      "sha256": "022B7B406CD4535DFF9C1BDE57492891A9F3D961C27667FAFDBC45033C377FF8",
+      "search_text": "堆叠分母守恒 同一曲线端点 已画路径 读数",
+      "input_contract": "Pure helper requires an additive stack with explicit total or a strictly increasing polyline; endpoint, drawn path and readout share one series.",
+      "bad_fit": "不核实原始数据、分类互斥性或来源，也不提供完整图表场景。",
+      "availability": "source_only_project_adaptation_required", "public_export_eligible": true
+    },
+    {
+      "id": "semantic_action:PathArc", "path": "src/PathArc.ts",
+      "sha256": "6FD5C66AC8D1F44308479B5A4B3A779B555605B9D9E40F9FB2FA1826FBD192BD",
+      "search_text": "贝塞尔弧长 时间进度 路径距离 飞行轨迹",
+      "input_contract": "Pure helper returns separate cubic timeFraction and approximate traveled arcFraction from four finite control points.",
+      "bad_fit": "不自动匀速、转向、处理碰撞或提供真实镜头。",
+      "availability": "source_only_project_adaptation_required", "public_export_eligible": true
+    }
+  ]
+}

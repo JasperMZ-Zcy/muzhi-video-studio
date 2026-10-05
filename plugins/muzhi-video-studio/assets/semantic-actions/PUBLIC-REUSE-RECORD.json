@@ -1,0 +1,29 @@
+{
+  "asset_id": "muzhi-semantic-actions-public-v1",
+  "release_scope": "public-generic-source-only",
+  "included": [
+    "src/RowCanvasTransfer.tsx",
+    "src/FocusHandoff.tsx",
+    "src/PolarContourMorph.tsx",
+    "src/CountParticleFill.tsx",
+    "src/SceneCoordinate.ts",
+    "src/ChartGeometry.ts",
+    "src/PathArc.ts",
+    "asset-record.json"
+  ],
+  "excluded": [
+    "third-party demo JSX and media",
+    "project screenshots, artwork, voice and video",
+    "project props, render receipts and local paths",
+    "external models, fonts and credentials"
+  ],
+  "rights_review": {
+    "status": "approved-for-public-generic-source",
+    "rights": "Locally authored parameterized source; no upstream demo code or third-party media is embedded.",
+    "privacy": "No person, account, device, business project or secret data in the seven source files.",
+    "portability": "Four JSX units require the user's React runtime; three pure TypeScript helpers have no bundled runtime dependency. No private workspace path is required.",
+    "context": "Mechanisms need project facts, authorized visuals, timing and review. Source-only publication is not preapproved film output."
+  },
+  "public_export_eligible": true,
+  "project_output_approved": false
+}

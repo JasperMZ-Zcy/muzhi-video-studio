@@ -1,0 +1,91 @@
+{
+  "semantic_contract_version": 2,
+  "preview_identity_version": 2,
+  "timebase_kind": "authored_screen_timing",
+  "source_script": "script.md",
+  "source_sha256": "eef87f436e087b3475700b670edcfb2e595bb19d2064a648d396eba6a6675bee",
+  "design_source": "design.md",
+  "design_sha256": "4eac2782eaac7d800ab89677e3dc32bf8993530bd4bde2d33832fe558171fb5f",
+  "style_intent": "浅纸色与深墨字，只作本地无声教学研究",
+  "authored_cues": [
+    {"id": 1, "text": "先看条件，再决定是否继续。", "start_seconds": 0, "end_seconds": 2},
+    {"id": 2, "text": "条件没核完，就先标待定。", "start_seconds": 2, "end_seconds": 4}
+  ],
+  "srt_exclusions": [],
+  "protected_cue_groups": [],
+  "segments": [
+    {
+      "id": "A01",
+      "spoken_text": "先看条件，再决定是否继续。条件没核完，就先标待定。",
+      "audience_takeaway": "条件未核时结论保持待定",
+      "reason": "教学示意需要区分条件与结果",
+      "visual_action": "条件出现后只显示待定，不自动通过",
+      "reading_plan": "两个作者节拍各留静读，不声称真实配音同步",
+      "handoff": "待定状态结束本段",
+      "visual_route": "native_mg",
+      "library_candidates": [],
+      "library_searches": [{"terms":["条件","待定"],"role":null,"per_source":1,"index_digest_sha256":"08d3687968a6b26a5a24d57ca81988fed8da914065c3f0673652871938ef78cf","results":[{"id":"shotcraft_pilot:ConditionComparison","sha256":"6dc22751a1a2155b1b8fefbdfc4c1dc07833929b953d20867b57177b94ab29a1","source_state":"current"}]}],
+      "library_decisions": [{"resource_id":"shotcraft_pilot:ConditionComparison","decision":"rejected","reason":"这个短例只演未核完的待定，不需要再画一个已满足的对照分支"}],
+      "library_skip_reason": "本例只要两状态准确排字，原创足够",
+      "requires_exact_information": false,
+      "evidence": [],
+      "srt_cue_ids": [1, 2],
+      "authored_timecode": "00:00:00,000 --> 00:00:04,000",
+      "semantic_role": "条件未核的教学说明",
+      "original_intent": "先核条件，未核完时停在待定",
+      "shot_purpose": "让待定状态在第二拍才出现",
+      "meaning_guards": [],
+      "callback_refs": [],
+      "continuity": {"entry": "原生字进入", "exit": "待定停留", "next_segment_id": null},
+      "visual_decision": {
+        "viewer_before": "可能把条件出现误当已经满足",
+        "media_roles": [
+          {"id": "exact", "kind": "native_exact", "responsibility": "准确中文及待定状态由本地代码控制",
+           "input_need": "本地教学字图，不需要额外艺术层", "input_state": "bound", "input_paths": ["src/Scene.tsx"]}
+        ]
+      },
+      "expression_requirements": [
+        {"id": "R01", "cue_ids": [1], "relation": "先看条件", "visible_change": "问题先出现但没有通过结果",
+         "must_be_seen": "第一拍没有绿色成功状态",
+         "attention": {"focus": "条件本身", "camera_or_view": "固定正视", "clear_before": [],
+                       "media_role_ids": ["exact"], "budget_seconds": 1.8, "min_read_seconds": 0.8}},
+        {"id": "R02", "cue_ids": [2], "relation": "未核完仍待定", "visible_change": "待定字在第二拍进入",
+         "must_be_seen": "第二拍仍未宣称已满足",
+         "attention": {"focus": "待定状态", "camera_or_view": "固定正视", "clear_before": ["第一拍问题的强调"],
+                       "media_role_ids": ["exact"], "budget_seconds": 1.8, "min_read_seconds": 0.8}}
+      ],
+      "resource_options": [
+        {"resource_id": "original:authored-study", "source": "original", "reason": "两拍准确字与状态用原生机制最直接",
+         "covers_requirement_ids": ["R01", "R02"], "gaps": [], "adaptation": "按作者屏幕秒点显示第二拍待定"}
+      ],
+      "chosen_resource": {
+        "resource_id": "original:authored-study",
+        "reason": "原生两态足够，不为库调用增加无关动作",
+        "implementation": {
+          "mode": "local_remotion",
+          "input_scope": "segment",
+          "status": "source_only_no_media",
+          "adaptation": "本地原创正确字与待定状态",
+          "fallback": "若短预览读不清则调整本例；不冒正式原声片",
+          "entry": "src/index.tsx",
+          "composition_id": "Studio-Authored-Minimal",
+          "consumer_probe": {"frame_number": 30, "frame_path": "frames/planned-f30.png",
+            "component_symbols": {"src/Scene.tsx": "AuthoredStudy"}},
+          "inputs": [
+            {"path": "script.md", "sha256": "eef87f436e087b3475700b670edcfb2e595bb19d2064a648d396eba6a6675bee"},
+            {"path": "design.md", "sha256": "4eac2782eaac7d800ab89677e3dc32bf8993530bd4bde2d33832fe558171fb5f"},
+            {"path": "src/index.tsx", "sha256": "2e0e358282a1b998a65387c653b97c2bb2eb7aae94cf200fc0b8d919f7be73a6"},
+            {"path": "src/Root.tsx", "sha256": "fccb8052aa9defb6a7230243eb20bdb76a94c13cfffa2237aea1e6b5ffd3e14e"},
+            {"path": "src/Scene.tsx", "sha256": "04bc8e59b1ad4e2f911efe0bdbef6de8c07126a6a0b8af583a568adc3660d369"}
+          ],
+          "expression_map": [
+            {"requirement_id": "R01", "responsible_part": "original", "resource_id": "project_original",
+             "project_input_paths": ["src/Scene.tsx"], "planned_state_change": "先呈现条件问题"},
+            {"requirement_id": "R02", "responsible_part": "original", "resource_id": "project_original",
+             "project_input_paths": ["src/Scene.tsx"], "planned_state_change": "第二拍待定进入"}
+          ]
+        }
+      }
+    }
+  ]
+}

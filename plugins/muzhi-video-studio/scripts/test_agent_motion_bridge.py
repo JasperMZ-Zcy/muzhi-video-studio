@@ -23,6 +23,10 @@ class BridgeTests(unittest.TestCase):
         root = Path(temporary.name)
         self.project = root / "synthetic-video"
         self.project.mkdir()
+        legacy = patch("project_policy.classify_project", return_value={
+            "kind": "legacy", "minimum_semantic_version": 1, "reason": "verified old bridge fixture"})
+        legacy.start()
+        self.addCleanup(legacy.stop)
         self.upstream = root / "separate-upstream"
         self.upstream.mkdir()
         for relative in bridge.PINNED_BLOBS:

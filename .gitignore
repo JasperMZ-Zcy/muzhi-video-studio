@@ -4,6 +4,7 @@ __pycache__/
 *.pyo
 .venv/
 venv/
+node_modules/
 
 # Credentials and machine-local configuration
 .env
@@ -47,3 +48,4 @@ bundle-receipt.json
 !docs/assets/showcase/douyin-performance.png
 !docs/assets/showcase/archival-current-r3-4s.png
 !docs/assets/showcase/archival-current-r3-native.mp4
+!plugins/muzhi-video-studio/assets/style-boards/archival-current-education-hero.png

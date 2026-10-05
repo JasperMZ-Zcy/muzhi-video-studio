@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only critical-gate runner for the Muzhi Editorial Studio plugin.
+"""Read-only critical-gate runner for the Muzhi Video Studio plugin.
 
 This module does not render, upload, schedule, call an API, or write state.
 It maps bounded production stages to the original bundled validators and makes
@@ -22,6 +22,8 @@ from fractions import Fraction
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
+from director_review_gate import validate as validate_director_review
+
 
 VENDOR_SCRIPTS = (
     Path(__file__).resolve().parent.parent
@@ -30,7 +32,7 @@ VENDOR_SCRIPTS = (
     / "scripts"
 )
 INPUT_MANIFEST = "artifacts/editorial-plugin-inputs.json"
-STAGES = ("design", "storyboard", "batch", "ingest", "master")
+STAGES = ("preview", "design", "storyboard", "batch", "ingest", "master")
 MAX_OUTPUT_CHARS = 12000
 SHA256_RE = re.compile(r"^[0-9a-fA-F]{64}$")
 
@@ -101,6 +103,8 @@ def _read_project_json(root: Path, relative: str) -> Any:
 def _validator_plan(stage: str) -> List[Dict[str, Any]]:
     if stage not in STAGES:
         raise RunnerError("--stage must be one of " + ", ".join(STAGES))
+    if stage == "preview":
+        return []  # Local preproduction has no formal bundled stage or approval waiver.
     plans: Dict[str, List[Dict[str, Any]]] = {
         "design": [
             {
@@ -157,7 +161,21 @@ def _validator_plan(stage: str) -> List[Dict[str, Any]]:
     return [{"name": item["name"], "script": item["script"], "arguments": list(item["arguments"])} for item in plans[stage]]
 
 
-def plan_stage(stage: str) -> Dict[str, Any]:
+def plan_stage(stage: str, workflow: str = "editorial") -> Dict[str, Any]:
+    if workflow == "studio":
+        if stage not in STAGES:
+            raise RunnerError("unknown studio stage")
+        return {"mode": "plan", "stage": stage, "workflow": workflow,
+                "checks": ["one bound motion plan", "generic director gate when applicable",
+                           "actual preview and same-version user approval remain separate"],
+                "production_ready": False}
+    if workflow == "same-script":
+        return {"mode": "plan", "stage": stage, "workflow": workflow,
+                "checks": ["six-file old/new same-script identity", "v2 motion plan and generic director review plan"]
+                if stage == "storyboard" else ["same-script route does not authorize this production stage"],
+                "production_ready": False}
+    if stage == "preview":
+        return {"mode": "plan", "stage": "preview", "checks": ["project motion-plan preview binding and director board integrity"], "production_ready": False}
     return {"mode": "plan", "stage": stage, "checks": _validator_plan(stage)}
 
 
@@ -276,19 +294,253 @@ def _run_validator(root: Path, item: Mapping[str, Any]) -> Dict[str, Any]:
     return check
 
 
-def check_stage(project: str | Path, stage: str) -> Dict[str, Any]:
+def check_stage(project: str | Path, stage: str, workflow: str = "editorial",
+                baseline: str = "artifacts/same-script-baseline.json",
+                plan_file: str = "motion-plan.json") -> Dict[str, Any]:
     root = _project_dir(project)
+    if workflow == "studio":
+        from motion_plan import validate as validate_motion_plan
+        from resource_handoff import resolve as resolve_resource, verify_preview
+        from project_policy import requires_visual_decision
+
+        if stage not in STAGES:
+            raise RunnerError("unknown studio stage")
+        current = _read_project_json(root, plan_file)
+        if not isinstance(current, dict):
+            raise RunnerError("studio motion plan must be an object")
+        planning = validate_motion_plan(current, root, "storyboard" if stage in ("storyboard", "batch", "ingest", "master") else "pre-director")
+        errors = ["motion plan: " + issue for issue in planning["errors"]]
+        bound = []
+        if stage == "preview":
+            resource_preflight = []
+            if requires_visual_decision(root, current):
+                for segment in current.get("segments", []) if isinstance(current.get("segments"), list) else []:
+                    if not isinstance(segment, dict):
+                        continue
+                    sid = segment.get("id")
+                    try:
+                        report = resolve_resource(root, current, sid)
+                        issues = report["issues"]
+                    except (ValueError, OSError, KeyError, TypeError) as exc:
+                        issues = [str(exc)]
+                    resource_preflight.append({"segment_id": sid, "ready_for_handoff": not issues, "issues": issues})
+                    errors.extend(f"resource {sid}: {issue}" for issue in issues)
+            for segment in current.get("segments", []) if isinstance(current.get("segments"), list) else []:
+                if isinstance(segment, dict) and isinstance(segment.get("preview_binding"), dict):
+                    result = verify_preview(root, current, segment.get("id"))
+                    bound.append({"segment_id": segment.get("id"), "passed": result["passed"], "errors": result["errors"]})
+                    errors.extend(f"preview {segment.get('id')}: {issue}" for issue in result["errors"])
+            media_bound = (bool(bound) and len(bound) == len(current.get("segments", [])) and not errors and
+                           all(isinstance(segment, dict) and isinstance(segment.get("preview_binding"), dict) and
+                               isinstance(segment["preview_binding"].get("preview_media"), dict)
+                               for segment in current.get("segments", [])))
+            return {"mode": "check", "workflow": workflow, "stage": stage, "passed": not errors,
+                    "errors": errors, "motion_plan": planning, "preview_bindings": bound,
+                    "resource_preflight": resource_preflight,
+                    "actual_media_ready": media_bound,
+                    "completion_state": "preview_media_bound" if media_bound else "plan_only",
+                    "seven_step_complete": False, "delivery_ready": False,
+                    "quality_review_claimed": False, "user_approval_recorded": False,
+                    "production_ready": False,
+                    "boundary": ("Authored screen timing is silent research only; no original voice/SRT or formal director approval is inferred."
+                                 if current.get("timebase_kind") == "authored_screen_timing" else
+                                 "Real-voice preview binds actual source/SRT/voice and any supplied media; sound alignment, director approval and external generation remain separate.")}
+        if stage == "design":
+            if current.get("design_source") != "design.md":
+                errors.append("design: project design.md binding required")
+            else:
+                try:
+                    if current.get("design_sha256") != _sha256(_safe_project_file(root, "design.md")[0]):
+                        errors.append("design: SHA-256 drift")
+                except RunnerError as exc:
+                    errors.append("design: " + str(exc))
+            return {"mode": "check", "workflow": workflow, "stage": stage, "passed": not errors,
+                    "errors": errors, "motion_plan": planning, "production_ready": False,
+                    "actual_media_ready": False, "completion_state": "plan_only",
+                    "seven_step_complete": False, "delivery_ready": False,
+                    "quality_review_claimed": False, "user_approval_recorded": False}
+        contract = _read_project_json(root, "artifacts/director-storyboard.json")
+        if (not isinstance(contract, dict) or contract.get("motion_plan_source") != plan_file or
+                contract.get("motion_plan_sha256") != _sha256(_safe_project_file(root, plan_file)[0])):
+            errors.append("studio director board must bind this exact motion plan path and SHA-256")
+        if current.get("timebase_kind") == "authored_screen_timing" and stage != "storyboard":
+            errors.append("authored_screen_timing cannot enter studio batch/ingest/master; original voice and real SRT are required")
+        if stage == "storyboard" and current.get("timebase_kind") == "authored_screen_timing":
+            errors.append("silent authored_screen_timing stays at preview; formal studio storyboard needs real voice/SRT or a separately scoped automation-test route")
+        gate_stage = "plan" if stage == "storyboard" else "master" if stage == "master" else "batch"
+        director_review = validate_director_review(root, gate_stage)
+        errors.extend("director review: " + issue for issue in director_review["errors"])
+        extra_checks = []
+        if stage == "ingest":
+            item = {"name": "dynamic_asset_duration", "script": "validate_dynamic_asset_duration.py",
+                    "arguments": ["--manifest", "artifacts/dynamic-asset-duration-records.json"]}
+            checked = _run_validator(root, item)
+            extra_checks.append(checked)
+            if not checked["passed"]:
+                errors.append("dynamic asset duration: actual ingest manifest failed")
+        approval = contract.get("approval") if isinstance(contract, dict) else None
+        media_ready = (not errors and all(isinstance(segment, dict) and
+                       isinstance(segment.get("preview_binding"), dict) and
+                       isinstance(segment["preview_binding"].get("preview_media"), dict)
+                       for segment in current.get("segments", [])))
+        return {"mode": "check", "workflow": workflow, "stage": stage, "passed": not errors,
+                "errors": errors, "motion_plan": planning, "director_review": director_review,
+                "checks": extra_checks, "quality_review_claimed": False,
+                "actual_media_ready": media_ready,
+                "completion_state": "formal_gate_passed" if media_ready else "plan_only",
+                "seven_step_complete": False, "delivery_ready": False,
+                "user_approval_recorded": bool(stage in ("batch", "ingest", "master") and director_review["passed"] and
+                                               isinstance(approval, dict) and approval.get("status") == "approved"),
+                "production_ready": stage in ("batch", "master") and not errors,
+                "boundary": "Generic studio director gate only; provider reservation, fee permission, independent review and publishing remain separate."}
+    if workflow == "same-script":
+        if stage != "storyboard":
+            return {"mode": "check", "workflow": workflow, "stage": stage, "passed": False,
+                    "errors": ["same-script comparison only routes storyboard; batch/master need the separately authorized production gates and real same-version user approval"],
+                    "quality_review_claimed": False, "user_approval_recorded": False}
+        comparison = same_script_compare(root, baseline, plan_file)
+        director_review = validate_director_review(root, "plan")
+        return {"mode": "check", "workflow": workflow, "stage": stage,
+                "passed": comparison["passed"] and director_review["passed"],
+                "input_check": {"name": "same_script_baseline", "passed": comparison["passed"],
+                                "errors": comparison["errors"], "files": comparison["baseline"]},
+                "checks": [{"name": "same_script_compare", "passed": comparison["passed"],
+                            "errors": comparison["errors"]}],
+                "director_review": director_review, "quality_review_claimed": False,
+                "user_approval_recorded": False,
+                "boundary": "Storyboard review route only; real preview bindings and independent judgments remain required. No batch/master approval inferred."}
+    if workflow != "editorial":
+        raise RunnerError("unknown workflow")
+    if stage == "preview":
+        from resource_handoff import preproduction_check
+        return {"mode": "check", **preproduction_check(root), "quality_review_claimed": False}
     plan = _validator_plan(stage)
     input_check = _verify_inputs(root)
     checks = [_run_validator(root, item) for item in plan]
-    passed = input_check["passed"] and all(check["passed"] for check in checks)
+    director_review = validate_director_review(root, {"storyboard": "plan", "batch": "batch", "master": "master"}[stage]) if stage in ("storyboard", "batch", "master") else None
+    passed = input_check["passed"] and all(check["passed"] for check in checks) and (director_review is None or director_review["passed"])
     return {
         "mode": "check",
         "stage": stage,
         "passed": passed,
         "input_check": input_check,
         "checks": checks,
+        "director_review": director_review,
         "quality_review_claimed": False,
+    }
+
+
+def same_script_compare(
+    project: str | Path,
+    baseline: str = "artifacts/same-script-baseline.json",
+    plan_file: str = "motion-plan.json",
+) -> Dict[str, Any]:
+    """Read one old/new script comparison without creating another shot plan.
+
+    The baseline holds local copies of the old inputs and output identities.
+    The new plan remains the sole source of new segments and chosen mechanisms.
+    This command does not reserve work, render media, or approve a storyboard.
+    """
+    from motion_plan import validate as validate_motion_plan
+
+    root = _project_dir(project)
+    declared = _read_project_json(root, baseline)
+    new_plan = _read_project_json(root, plan_file)
+    if not isinstance(declared, dict) or declared.get("schema_version") != 1 or not isinstance(declared.get("files"), dict):
+        raise RunnerError("same-script baseline requires schema_version 1 and files object")
+    if not isinstance(new_plan, dict):
+        raise RunnerError("new motion plan must be a JSON object")
+
+    required = ("source_script", "srt_source", "voice_source", "old_motion_plan", "old_storyboard", "old_media")
+    records: Dict[str, Dict[str, Any]] = {}
+    errors: List[str] = []
+    for role in (*required, "old_board_html"):
+        entry = declared["files"].get(role)
+        if entry is None and role == "old_board_html":
+            continue
+        if not isinstance(entry, dict) or _as_sha256(entry.get("sha256")) is None:
+            errors.append(role + ": path and SHA-256 required")
+            continue
+        try:
+            path, relative = _safe_project_file(root, entry.get("path"))
+            actual = _sha256(path)
+        except RunnerError as exc:
+            errors.append(role + ": " + str(exc))
+            continue
+        expected = _as_sha256(entry["sha256"])
+        records[role] = {"path": relative, "sha256": actual, "passed": actual == expected}
+        if actual != expected:
+            errors.append(role + ": copied old file differs from declared SHA-256")
+
+    old_plan: Dict[str, Any] = {}
+    old_board: Dict[str, Any] = {}
+    try:
+        old_plan = _read_project_json(root, records["old_motion_plan"]["path"])
+        old_board = _read_project_json(root, records["old_storyboard"]["path"])
+        if not isinstance(old_plan, dict) or not isinstance(old_board, dict):
+            raise RunnerError("old plan and storyboard must be JSON objects")
+    except (KeyError, RunnerError) as exc:
+        errors.append("old plan/storyboard: " + str(exc))
+
+    for role, old_key, new_key in (
+        ("source_script", "source_sha256", "source_sha256"),
+        ("srt_source", "srt_sha256", "srt_sha256"),
+        ("voice_source", "audio_sha256", "audio_sha256"),
+    ):
+        record = records.get(role)
+        if record is None:
+            continue
+        expected = record["sha256"]
+        if _as_sha256(old_plan.get(old_key)) != expected:
+            errors.append(role + ": old plan does not bind the copied original")
+        if _as_sha256(new_plan.get(new_key)) != expected:
+            errors.append(role + ": new plan does not use the same original bytes")
+        new_source_key = {"source_script": "source_script", "srt_source": "srt_source", "voice_source": "audio_source"}[role]
+        try:
+            new_path, _ = _safe_project_file(root, new_plan.get(new_source_key))
+            if _sha256(new_path) != expected:
+                errors.append(role + ": new plan source file differs from the copied original")
+        except RunnerError as exc:
+            errors.append(role + ": " + str(exc))
+
+    old_plan_record = records.get("old_motion_plan")
+    if old_plan_record and _as_sha256(old_board.get("motion_plan_sha256")) != old_plan_record["sha256"]:
+        errors.append("old storyboard does not bind the copied old plan")
+    if new_plan.get("semantic_contract_version") != 2:
+        errors.append("new plan must use semantic_contract_version 2")
+    plan_check = validate_motion_plan(new_plan, root, "pre-director")
+    if not plan_check.get("passed"):
+        errors.append("new v2 motion plan has unresolved structural issues")
+
+    old_segments = old_plan.get("segments") if isinstance(old_plan, dict) else None
+    new_segments = new_plan.get("segments")
+    new_segments = new_segments if isinstance(new_segments, list) else []
+    preview_bound = sum(1 for item in new_segments if isinstance(item, dict) and isinstance(item.get("preview_binding"), dict))
+    expression_count = sum(len(item.get("expression_requirements", [])) for item in new_segments
+                           if isinstance(item, dict) and isinstance(item.get("expression_requirements"), list))
+    def routes(items: Any) -> Dict[str, int]:
+        counts: Dict[str, int] = {}
+        for item in items if isinstance(items, list) else []:
+            route = item.get("visual_route") if isinstance(item, dict) else None
+            if isinstance(route, str):
+                counts[route] = counts.get(route, 0) + 1
+        return counts
+    return {
+        "mode": "same-script",
+        "passed": not errors,
+        "errors": errors,
+        "baseline": records,
+        "old_segment_count": len(old_segments) if isinstance(old_segments, list) else None,
+        "new_segment_count": len(new_segments),
+        "old_visual_routes": routes(old_segments),
+        "new_visual_routes": routes(new_segments),
+        "new_expression_requirement_count": expression_count,
+        "new_preview_binding_count": preview_bound,
+        "new_plan_check": plan_check,
+        "preproduction_boundary": "Plan and file identity only; preview bindings require real local media. No user approval, full animation, external video job, or master is inferred.",
+        "user_readable_change": "同一稿、字幕和本人原声的字节身份已对齐；新计划重新按意群和可见关系选择机制。新旧镜头数只描述结构，不代表画面质量；真实新帧和连续样片须另看。" if not errors else "原件身份或新计划结构尚有缺口；先修正列出的项目，再比较画面。",
+        "quality_review_claimed": False,
+        "user_approval_recorded": False,
     }
 
 
@@ -592,9 +844,17 @@ def build_parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", required=True)
     plan = commands.add_parser("plan", help="show original bundled validators for a production stage")
     plan.add_argument("--stage", required=True, choices=STAGES)
+    plan.add_argument("--workflow", choices=("editorial", "same-script", "studio"), default="editorial")
     check = commands.add_parser("check", help="verify inputs then execute original bundled validators")
     check.add_argument("--project", required=True)
     check.add_argument("--stage", required=True, choices=STAGES)
+    check.add_argument("--workflow", choices=("editorial", "same-script", "studio"), default="editorial")
+    check.add_argument("--baseline", default="artifacts/same-script-baseline.json")
+    check.add_argument("--plan", default="motion-plan.json")
+    comparison = commands.add_parser("same-script", help="read-only old/new input identity and v2 plan comparison")
+    comparison.add_argument("--project", required=True)
+    comparison.add_argument("--baseline", default="artifacts/same-script-baseline.json")
+    comparison.add_argument("--plan", default="motion-plan.json")
     audit = commands.add_parser("media-audit", help="audit only declared media bytes and probe facts")
     audit.add_argument("--project", required=True)
     audit.add_argument("--manifest", required=True, help="project-relative media manifest JSON")
@@ -607,9 +867,11 @@ def build_parser() -> argparse.ArgumentParser:
 def run(arguments: Optional[Sequence[str]] = None) -> Dict[str, Any]:
     args = build_parser().parse_args(arguments)
     if args.command == "plan":
-        return plan_stage(args.stage)
+        return plan_stage(args.stage, args.workflow)
     if args.command == "check":
-        return check_stage(args.project, args.stage)
+        return check_stage(args.project, args.stage, args.workflow, args.baseline, args.plan)
+    if args.command == "same-script":
+        return same_script_compare(args.project, args.baseline, args.plan)
     if args.command == "media-audit":
         return media_audit(args.project, args.manifest, args.ffprobe, args.ffmpeg, args.decode)
     raise AssertionError("unreachable command")
