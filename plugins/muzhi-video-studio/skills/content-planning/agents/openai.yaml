@@ -1,0 +1,4 @@
+interface:
+  display_name: "牧之远见·内容与口播"
+  short_description: "从观众问题和内容依据出发讨论观点、结构与口播，确认稿后交导演制作入口"
+  default_prompt: "使用 $content-planning 讨论这条牧之远见视频的方向，按本轮需要准备供我审阅的口播稿。"

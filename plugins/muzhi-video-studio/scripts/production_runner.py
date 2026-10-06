@@ -301,7 +301,7 @@ def check_stage(project: str | Path, stage: str, workflow: str = "editorial",
     if workflow == "studio":
         from motion_plan import validate as validate_motion_plan
         from resource_handoff import resolve as resolve_resource, verify_preview
-        from project_policy import requires_visual_decision
+        from project_policy import classify_project, requires_visual_decision
 
         if stage not in STAGES:
             raise RunnerError("unknown studio stage")
@@ -367,6 +367,26 @@ def check_stage(project: str | Path, stage: str, workflow: str = "editorial",
             errors.append("authored_screen_timing cannot enter studio batch/ingest/master; original voice and real SRT are required")
         if stage == "storyboard" and current.get("timebase_kind") == "authored_screen_timing":
             errors.append("silent authored_screen_timing stays at preview; formal studio storyboard needs real voice/SRT or a separately scoped automation-test route")
+        if classify_project(root)["kind"] != "legacy" and current.get("timebase_kind") == "real_voice_srt":
+            from narration_track import verify_lock
+            errors.extend("narration: " + issue for issue in verify_lock(root, current))
+        if stage in ("batch", "ingest", "master") and classify_project(root)["kind"] != "legacy":
+            from music_method import status as music_status
+            try:
+                if not music_status(root)["selected"]:
+                    errors.append("this film needs an explicit music method, including none")
+            except (ValueError, OSError, TypeError, json.JSONDecodeError) as exc:
+                errors.append("music method: " + str(exc))
+            generated_routes = any(isinstance(segment, dict) and
+                                   (segment.get("visual_route") == "image_to_video" or
+                                    (segment.get("visual_route") == "hybrid" and segment.get("uses_image_to_video") is True))
+                                   for segment in current.get("segments", []))
+            if generated_routes:
+                from provider_router import RouterError, validate_new_film_choice
+                try:
+                    errors.extend("video provider: " + issue for issue in validate_new_film_choice(root))
+                except (RouterError, OSError, ValueError, TypeError) as exc:
+                    errors.append("video provider: " + str(exc))
         gate_stage = "plan" if stage == "storyboard" else "master" if stage == "master" else "batch"
         director_review = validate_director_review(root, gate_stage)
         errors.extend("director review: " + issue for issue in director_review["errors"])
@@ -392,7 +412,7 @@ def check_stage(project: str | Path, stage: str, workflow: str = "editorial",
                 "user_approval_recorded": bool(stage in ("batch", "ingest", "master") and director_review["passed"] and
                                                isinstance(approval, dict) and approval.get("status") == "approved"),
                 "production_ready": stage in ("batch", "master") and not errors,
-                "boundary": "Generic studio director gate only; provider reservation, fee permission, independent review and publishing remain separate."}
+                "boundary": "Generic studio director gate only; provider reservation, fee permission, 06/07 release review and publishing remain separate."}
     if workflow == "same-script":
         if stage != "storyboard":
             return {"mode": "check", "workflow": workflow, "stage": stage, "passed": False,

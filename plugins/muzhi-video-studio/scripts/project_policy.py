@@ -133,10 +133,90 @@ def classify_project(project: str | Path) -> dict[str, Any]:
 
 
 def verified_prior_v2_same_script(project: str | Path, plan: dict[str, Any]) -> bool:
-    """No private sealed-project exception is distributed in the public plugin."""
+    """Recognize an already-rendered v2 comparison from bound old inputs/media.
+
+    A label or copied baseline alone is not enough: a previously sealed byte
+    manifest outside this project checkout must identify this exact absolute
+    project path and the original plan/board/voice/media bytes. Rebinding a new
+    plan or preview, even for the same script, leaves that frozen identity.
+    """
+    root = Path(project).resolve()
+    if not root.is_dir() or not isinstance(plan, dict) or plan.get("semantic_contract_version") != 2:
+        return False
+    baseline = _object(root / "artifacts/same-script-baseline.json")
+    files = baseline.get("files") if isinstance(baseline, dict) and baseline.get("schema_version") == 1 else None
+    names = ("source_script", "srt_source", "voice_source", "old_motion_plan", "old_storyboard", "old_media")
+    if not isinstance(files, dict) or any(not isinstance(files.get(name), dict) for name in names):
+        return False
+    if any(not _bound_file(root, files[name].get("path"), files[name].get("sha256")) for name in names):
+        return False
+    old_media = root / files["old_media"]["path"]
+    try:
+        with old_media.open("rb") as stream:
+            header = stream.read(12)
+        if old_media.stat().st_size < 4096 or header[4:8] != b"ftyp":
+            return False
+    except OSError:
+        return False
+    for name, plan_hash in (("source_script", "source_sha256"), ("srt_source", "srt_sha256"),
+                            ("voice_source", "audio_sha256")):
+        if str(plan.get(plan_hash, "")).lower() != files[name]["sha256"].lower():
+            return False
+    if plan.get("audio_source") != files["voice_source"]["path"]:
+        return False
+    director = _object(root / "artifacts/director-storyboard.json")
+    if not director or director.get("director_review_contract_version") != 1:
+        return False
+    plan_path = director.get("motion_plan_source")
+    if not _bound_file(root, plan_path, director.get("motion_plan_sha256")):
+        return False
+    try:
+        bound_plan = _object(root / plan_path)
+    except (TypeError, ValueError):
+        return False
+    if bound_plan != plan:
+        return False
+    segments = plan.get("segments")
+    if not isinstance(segments, list) or not segments:
+        return False
+    locked_paths = {root / plan_path, root / "artifacts/director-storyboard.json"}
+    locked_paths.update(root / files[name]["path"] for name in names)
+    for segment in segments:
+        binding = segment.get("preview_binding") if isinstance(segment, dict) else None
+        media = binding.get("preview_media") if isinstance(binding, dict) else None
+        if not isinstance(media, dict) or not _bound_file(root, media.get("path"), media.get("sha256")):
+            return False
+        locked_paths.add(root / media["path"])
+    # A closed project's external seal, not a plan field, grants this narrow
+    # readback exception. Do not scan the machine for arbitrary "old" claims.
+    for ancestor in (root, *list(root.parents)[:4]):
+        releases = ancestor / "sealed-releases"
+        if not releases.is_dir():
+            continue
+        for release in releases.iterdir():
+            if not release.is_dir():
+                continue
+            result = _object(release / "封存验证结果.json")
+            manifest = _object(release / "文件校验清单.json")
+            if (not result or result.get("allArchiveEntriesRead") is not True or
+                    result.get("sourceRecheckedAfterArchive") is not True or result.get("mismatchCount") != 0 or
+                    not manifest or not isinstance(manifest.get("files"), list)):
+                continue
+            sealed = {}
+            for entry in manifest["files"]:
+                if not isinstance(entry, dict) or not isinstance(entry.get("sourcePath"), str):
+                    continue
+                try:
+                    source = Path(entry["sourcePath"]).resolve()
+                except (OSError, ValueError):
+                    continue
+                sealed[source] = str(entry.get("sha256", "")).lower()
+            if all(path.resolve() in sealed and _bound_file(root, str(path.relative_to(root)), sealed[path.resolve()])
+                   for path in locked_paths):
+                return True
     return False
 
 
 def requires_visual_decision(project: str | Path, plan: dict[str, Any]) -> bool:
-    """Public v2 plans require a concrete visual choice; verified v1 work retains its contract."""
+    """New v2 work needs a concrete visual choice; frozen same-script work does not migrate."""
     return isinstance(plan, dict) and plan.get("semantic_contract_version") == 2 and not verified_prior_v2_same_script(project, plan)

@@ -15,7 +15,7 @@ WAN 和云端 MiniMax 必须由使用者先完成自己的工具连接、模型�
 
 ## 选择与切换
 
-先查看项目当前状态：
+先按口播分清真正需要连续图生动作的镜头。纯资料近读、图表和原生动画不触发图生选择；新片确需图生时，先向使用者确认**这条片**采用什么方法，不自动套本地H3或上一片的选择。旧项目已有渠道、已提交任务和费用回执按原状态继续。查看项目当前状态：
 
 ```bash
 python <PLUGIN_ROOT>/scripts/provider_router.py status --project <PROJECT_ROOT>
@@ -31,6 +31,12 @@ python <PLUGIN_ROOT>/scripts/provider_router.py select \
 ```
 
 已提交任务、历史回执和旧输出不会因为换渠道而被抹掉或改写。切换渠道也不等于重启内容、换画风或允许额外费用。画风另由项目风格锁管理；本地 H3、云端 MiniMax 和 Google Flow 的镜头最终仍按同一交付合同进入剪辑。
+
+## 本片配乐与本机转写
+
+配乐方法每条片先选：本机代码创作、已核确实可用且获本次授权的AI音乐、使用者提供且有使用依据的素材，或不配。`music_method.py`只登记本片选择；选代码创作后，`code_music.py`按这条片的谱事件、节奏、段落和有限程序音色输出WAV，不提供固定80 BPM音乐或真实乐器采样。是否贴片要在实际口播和画面里听，输出文件与哈希不等于音乐已经好听。AI接口代码存在不代表账户、余额、权利或模型已可用。
+
+本人录音如需从M4A处理，使用者须具备本机FFmpeg；`decode-local`写新标准PCM16 WAV副本并保原件，随后清理仍只写新候选。原WAV容器不可读时先另作标准PCM16副本，不覆盖原件。候选音轨先由本人试听确认，随后制作助手才可按最终声音校对SRT。公开包的本地ASR是**可选草稿工具**：须由使用者自行准备 `faster-whisper` 和本片明确指定的已存在模型snapshot；`narration_track.py asr-status --project <项目> --model-dir <已有快照>`只核依赖与文件，`transcribe-local --project <项目> --candidate <已确认候选> --out-dir <项目内新目录> --model-dir <同一快照>`在本机离线CPU运行。`ready` 不证明模型质量或字幕正确；缺依赖、快照或试听确认便停在相应缺口，不自动下载、换私人路径或切付费云端。具体调用见[快速开始](GETTING_STARTED.md#把自己的内容接进来)，也可由制作助手按实际声音人工校对。
 
 ## 登记新的提供方
 
@@ -62,4 +68,4 @@ python <PLUGIN_ROOT>/scripts/provider_router.py contract --project <PROJECT_ROOT
 
 ## 费用仍是独立边界
 
-选择提供方不等于允许付费。对每一个新生成请求，先由 `generation_ledger.py` 留额；未知成本继续按预估占用，失败重试需要明确的额外授权记录。详见 [快速开始](GETTING_STARTED.md#成本台账的最小示例)。
+选择提供方或配乐方法不等于允许付费。对每一个新生成请求，先由 `generation_ledger.py` 留额；未知成本继续按预估占用，失败重试需要明确的额外授权记录。入门边界见[快速开始](GETTING_STARTED.md)，实际参数先核本包脚本帮助和本片已批准范围。

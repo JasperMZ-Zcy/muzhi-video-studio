@@ -29,6 +29,7 @@ ARTIFACTS_DIR = "artifacts"
 LEDGER_FILENAME = "generation-ledger.json"
 LOCK_FILENAME = ".generation-ledger.lock"
 KINDS = ("asr", "image", "video", "music", "render")
+LOCAL_RENDER_PROVIDERS = {"remotion", "local-remotion", "ffmpeg", "local-ffmpeg", "blender", "local-blender"}
 UNITS = ("credits", "usd", "rmb", "none")
 ACTIVE_STATES = {"reserved", "pending", "unknown"}
 TERMINAL_STATES = {"succeeded", "failed"}
@@ -332,6 +333,8 @@ def _request(
     semantic_key = _text(key, "--key")
     provider_name = _text(provider, "--provider")
     model_name = _text(model, "--model")
+    if kind == "render" and provider_name.casefold() not in LOCAL_RENDER_PROVIDERS:
+        raise ValidationError("--kind render is for local rendering only; generated video requires --kind video and its director gate")
     if unit not in UNITS:
         raise ValidationError("invalid --unit")
     estimate = _decimal(estimated_cost, "--estimated-cost")
@@ -538,6 +541,48 @@ def reserve(
     expected_revision: Optional[int] = None,
     max_outstanding: Any = DEFAULT_MAX_OUTSTANDING,
 ) -> Dict[str, Any]:
+    # Images may be needed to build the keyframe-backed director board; only
+    # video reservations are downstream of its user-approved batch gate.
+    if kind == "video":
+        from director_review_gate import validate as validate_director_review
+        review = validate_director_review(project, "batch")
+        if not review["passed"] or review.get("legacy_not_certified"):
+            raise ValidationError("director review blocks video reservation: " + "; ".join(review["errors"]))
+        from project_policy import classify_project
+        if classify_project(project)["kind"] != "legacy":
+            from narration_track import verify_lock
+            from music_method import status as music_status
+            root = _project_dir(project)
+            try:
+                contract = json.loads((root / "artifacts/director-storyboard.json").read_text(encoding="utf-8-sig"))
+                relative = contract["motion_plan_source"]
+                if not isinstance(relative, str) or Path(relative).is_absolute() or ".." in Path(relative).parts:
+                    raise ValueError("unsafe director motion plan path")
+                plan_path = (root / relative).resolve()
+                if not plan_path.is_relative_to(root) or plan_path.is_symlink():
+                    raise ValueError("director motion plan escapes project")
+                if hashlib.sha256(plan_path.read_bytes()).hexdigest() != contract.get("motion_plan_sha256"):
+                    raise ValueError("director motion plan SHA differs")
+                plan = json.loads(plan_path.read_text(encoding="utf-8-sig"))
+                if not isinstance(plan, dict):
+                    raise ValueError("director motion plan must be an object")
+            except (OSError, UnicodeError, json.JSONDecodeError, TypeError, KeyError, ValueError) as exc:
+                raise ValidationError("new film director-bound motion plan unavailable for narration check") from exc
+            narration_errors = verify_lock(root, plan)
+            if narration_errors:
+                raise ValidationError("narration lock blocks video reservation: " + "; ".join(narration_errors))
+            try:
+                if not music_status(root)["selected"]:
+                    raise ValidationError("this film must choose a music method before video reservation")
+            except (ValueError, OSError, TypeError, json.JSONDecodeError) as exc:
+                raise ValidationError("music method blocks video reservation: " + str(exc)) from exc
+        from provider_router import RouterError, validate_new_film_choice
+        try:
+            choice_errors = validate_new_film_choice(project, provider)
+        except (RouterError, OSError, ValueError, TypeError) as exc:
+            raise ValidationError("video provider selection blocks reservation: " + str(exc)) from exc
+        if choice_errors:
+            raise ValidationError("video provider selection blocks reservation: " + "; ".join(choice_errors))
     request = _request(project, kind, key, input_files, provider, model, estimated_cost, budget, unit, quote, require_quote=True)
     maximum = _max_outstanding(max_outstanding)
 

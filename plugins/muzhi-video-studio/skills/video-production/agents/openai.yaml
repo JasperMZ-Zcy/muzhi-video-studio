@@ -1,0 +1,4 @@
+interface:
+  display_name: "牧之远见·导演与制作"
+  short_description: "接已确认口播和本人录音，校对字幕、逐镜审核近成片画面，再进入制作"
+  default_prompt: "用 $video-production 继续这条已确认稿的知识视频，先核项目状态、最终音轨和SRT。"

@@ -267,18 +267,20 @@ def select_provider(
     if provider is None:
         raise RouterError("provider is not registered for this project")
     prior = state.get("selection")
-    if isinstance(prior, dict) and prior.get("provider_id") == provider_id and prior.get("scope") == scope:
+    if (isinstance(prior, dict) and prior.get("provider_id") == provider_id and
+            prior.get("scope") == scope and prior.get("source") != "global_default"):
         return {"mode": "select", "changed": False, "idempotent": True, "selection": prior}
     actual_quote = _quote(quote)
     selection = {
         "provider_id": provider_id,
         "scope": DEFAULT_SCOPE,
         "quote": actual_quote,
+        "source": "project_explicit",
         "selected_at": _now(),
     }
     history_record = dict(selection)
     if isinstance(prior, dict):
-        history_record["action"] = "switched"
+        history_record["action"] = "overrode_default" if prior.get("source") == "global_default" else "switched"
         history_record["from_provider"] = prior.get("provider_id")
     else:
         history_record["action"] = "selected"
@@ -299,6 +301,7 @@ def status(project: str | Path) -> Dict[str, Any]:
             "mode": "status",
             "selection": None,
             "needs_user_choice": True,
+            "selection_source": "unselected",
             "providers": _registry_from_state(None),
             "project_local": True,
         }
@@ -307,6 +310,7 @@ def status(project: str | Path) -> Dict[str, Any]:
         "mode": "status",
         "selection": selection if isinstance(selection, dict) else None,
         "needs_user_choice": not isinstance(selection, dict),
+        "selection_source": (selection.get("source") or "project_explicit") if isinstance(selection, dict) else "unselected",
         "providers": _registry_from_state(state),
         "custom_registry": state["custom_registry"],
         "history": state["history"],
@@ -314,6 +318,21 @@ def status(project: str | Path) -> Dict[str, Any]:
         "pending_job_ids": state.get("pending_job_ids", []),
         "project_local": True,
     }
+
+
+def validate_new_film_choice(project: str | Path, provider_id: Optional[str] = None) -> List[str]:
+    """Require a recorded film choice; verified old projects retain their route."""
+    from project_policy import classify_project
+
+    root = _project_dir(project)
+    if classify_project(root)["kind"] == "legacy":
+        return []
+    choice = status(root).get("selection")
+    if not isinstance(choice, dict) or choice.get("source") != "project_explicit" or not choice.get("quote"):
+        return ["new film image-to-video requires an explicit this-film provider selection"]
+    if provider_id is not None and choice.get("provider_id") != provider_id:
+        return ["video provider differs from this film's selected provider"]
+    return []
 
 
 def contract(project: str | Path) -> Dict[str, Any]:

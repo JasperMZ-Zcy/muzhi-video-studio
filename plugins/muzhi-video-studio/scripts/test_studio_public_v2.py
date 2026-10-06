@@ -28,7 +28,11 @@ class PublicStudioV2Tests(unittest.TestCase):
                          {"shotcraft", "shotcraft_pilot", "semantic_action"})
         self.assertEqual(resource_handoff.read(["semantic_action:CountParticleFill"])[0]["indexed_hash_matches"], True)
         self.assertEqual(resource_handoff.read(["semantic_action:SceneCoordinate"])[0]["learning_evidence"]["execution_level"],
-                         "adaptable_private_code_helper")
+                         "adaptable_bundled_code_helper")
+        source = resource_handoff.read(["semantic_action:CountParticleFill"])[0]
+        self.assertEqual(source["status"], "project_adaptation_required")
+        self.assertEqual(source["availability"], "present_adaptable_source")
+        self.assertEqual(source["learning_evidence"]["bounded_project_media_count"], 0)
 
     def test_minimal_example_is_plan_only_with_real_public_search(self):
         self.assertTrue(motion_plan.validate(self.plan, self.project)["passed"])

@@ -1,4 +1,4 @@
 interface:
-  display_name: "当前品牌杂志插画制作"
-  short_description: "沿用已确认画风与声音，按项目状态继续创作、局部修改和单层交付。"
+  display_name: "牧之远见·旧杂志项目续作"
+  short_description: "为已锁定的杂志插画项目沿用原画风、本人声音和质量门，按项目状态续作"
   default_prompt: "使用 $magazine-production 继续当前杂志插画视频，先读取现有项目状态与已确认要求。"

@@ -15,7 +15,7 @@ import struct
 from pathlib import Path
 from typing import Any
 
-from project_policy import classify_project, requires_visual_decision
+from project_policy import classify_project, requires_visual_decision, verified_prior_v2_same_script
 
 
 CONTRACT = "artifacts/director-storyboard.json"
@@ -315,6 +315,25 @@ def validate(project: str | Path, stage: str = "plan", contract_path: str = CONT
         _review(shot.get("review"), label, errors)
     if shot_ids != segment_ids:
         errors.append("director contract: shots must cover each motion-plan segment once in order")
+    current_board_required = (isinstance(plan, dict) and plan.get("semantic_contract_version") == 2
+                              and not verified_prior_v2_same_script(root, plan))
+    if current_board_required:
+        for segment, shot in zip(plan.get("segments", []) if isinstance(plan.get("segments"), list) else [], shots):
+            if not isinstance(segment, dict) or not isinstance(shot, dict):
+                continue
+            preview = segment.get("preview_binding")
+            displayed = preview.get("keyframes") if isinstance(preview, dict) else None
+            reviewed = shot.get("keyframes")
+            def frame_identity(frames):
+                return [(item.get("path"), item.get("sha256")) for item in frames if isinstance(item, dict)] if isinstance(frames, list) else None
+            if frame_identity(displayed) != frame_identity(reviewed):
+                errors.append(f"shot {segment.get('id')}: reviewed keyframes differ from displayed preview keyframes")
+        if contract.get("preproduction_contract_version") != 1:
+            errors.append("new v2 director board needs the current preproduction HTML contract")
+        else:
+            from resource_handoff import preproduction_check
+            same_board = preproduction_check(root, contract.get("motion_plan_source"), contract_path, require_board=True)
+            errors.extend("director board same-version: " + issue for issue in same_board["errors"])
     if isinstance(plan, dict) and plan.get("semantic_contract_version") == 2:
         _independent_review(root, contract, plan, shots, errors)
     approval = contract.get("approval")

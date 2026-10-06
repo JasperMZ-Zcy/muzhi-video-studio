@@ -165,7 +165,7 @@ def _project_component_rows(source, base, definitions):
                "search_text": name + " " + title + " " + purpose,
                "path": str(path), "exists": path.is_file(), "category": "project_example_component",
                "status": "example_source_not_general_template", "availability": "present" if path.is_file() else "source_missing",
-               "rights": "private project example; adapt facts, design and timing before reuse"}
+               "rights": "bundled locally authored example source under repository MIT; adapt facts, design and timing before use"}
 
 
 def _shotcraft_pilot_rows():
@@ -208,7 +208,7 @@ def _semantic_action_rows():
                "capability_class": "pure_geometry_helper_not_jsx_scene" if is_helper else "source_only_project_adaptation_required",
                "title": titles[path.stem], "search_text": entry["search_text"],
                "path": str(path), "exists": path.is_file(), "category": record["asset_type"],
-               "status": entry["availability"], "availability": "present_source_only" if path.is_file() else "source_missing",
+               "status": "project_adaptation_required", "availability": "present_adaptable_source" if path.is_file() else "source_missing",
                "rights": record["rights"], "record_sha256": sha_file(SEMANTIC_ACTION_RECORD),
                "indexed_sha256": entry["sha256"], "source_project": record["source_project"],
                "reuse_conditions": record["reuse_conditions"], "dependencies": record["dependencies"],
@@ -483,8 +483,8 @@ def read(ids):
                             "current_source_unread_or_drifted",
             "historical_research_read_scope": mechanism.get("original_read"),
             "capability_class": item.get("capability_class") or mechanism.get("capability_class") or row.get("role"),
-            "execution_level": "adaptable_private_code" if row.get("role") == "adaptable_code" else
-                               "adaptable_private_code_helper" if row.get("role") == "adaptable_code_helper" else
+            "execution_level": "adaptable_bundled_code" if row.get("role") == "adaptable_code" else
+                               "adaptable_bundled_code_helper" if row.get("role") == "adaptable_code_helper" else
                                "method_or_text_not_renderer" if row.get("role") in {"reference", "method"} else
                                "asset_or_record_requires_project_adapter",
             "bounded_project_media_count": len(verified_examples),
@@ -2031,6 +2031,9 @@ def board_html(root, plan, contract, output):
         result = verify_preview(root, plan, sid)
         if not result["passed"]:
             raise ValueError(sid + ": " + "; ".join(result["errors"]))
+    audio_source = plan.get("audio_source") if plan.get("timebase_kind") == "real_voice_srt" else None
+    if audio_source and plan.get("audio_sha256") != sha_file(local_file(root, audio_source)):
+        raise ValueError("director board final voice hash drift")
     def esc(v):
         return html.escape(str(v if v is not None else ""))
     def href(name):
@@ -2101,6 +2104,13 @@ def board_html(root, plan, contract, output):
                          f"{interval[0]:g}–{interval[1]:g} 秒" if interval else "整段媒体（未给独立镜头秒域）")
         video_attrs = f" data-start='{interval[0]:g}' data-end='{interval[1]:g}'" if interval else ""
         video_html = "" if static_binding else f"<video controls playsinline preload='metadata'{video_attrs} src='{href(binding['preview_media']['path'])}'></video>"
+        audio_html = ""
+        if audio_source:
+            from expression_contract import cue_window
+            voice_start, voice_end = cue_window(root, plan, segment.get("srt_cue_ids"))
+            audio_html = (f"<p>本镜原声试听（{voice_start:g}–{voice_end:g} 秒）</p>"
+                          f"<audio controls preload='metadata' data-start='{voice_start:g}' data-end='{voice_end:g}' "
+                          f"src='{href(audio_source)}'></audio>")
         sections.append(f"<section><h2>镜头 {index} · {esc(segment.get('semantic_role') or segment.get('audience_takeaway'))}</h2>"
                         f"<p class='quote'>{esc(segment.get('spoken_text'))}</p><p>原意/易误解：{esc(segment.get('original_intent'))}</p>"
                         f"<p>本镜要做：{esc(segment.get('shot_purpose'))} · 观众应看懂：{esc(segment.get('audience_takeaway'))}</p>"
@@ -2113,14 +2123,14 @@ def board_html(root, plan, contract, output):
                         f"<p>起：{esc(actions.get('entry'))} → 变：{esc(actions.get('interaction'))} → 终：{esc(actions.get('result'))}</p>"
                         f"<p>阅读停留：{esc(actions.get('reading_hold') or segment.get('reading_plan'))} · 退出：{esc(actions.get('exit'))}</p>"
                         f"<p>接棒：{esc(continuity.get('exit') or segment.get('handoff'))} → {esc(continuity.get('next_segment_id'))}</p>"
-                        f"<div class='frames'>{frames}</div>{video_html}"
+                        f"<div class='frames'>{frames}</div>{video_html}{audio_html}"
                         f"<p>当前审核：{review_text}</p><p>可改点：{change_text or '待观众反馈'}</p>"
                         f"<details class='small'><summary>技术定位与同版校验</summary><p>段 ID：<code>{esc(segment['id'])}</code></p>"
                         f"<p>选定资源 ID：<code>{esc(chosen['resource_id'])}</code></p>{source_technical}"
                         f"<p>实际媒体 SHA-256：{esc(binding.get('preview_media', {}).get('sha256') if not static_binding else '静态源帧，无连续媒体')}</p></details></section>")
     title = esc(contract.get("title") or "同版镜头预览")
-    script = "<script>document.querySelectorAll('video[data-start]').forEach(v=>{const a=Number(v.dataset.start),b=Number(v.dataset.end);v.addEventListener('loadedmetadata',()=>{v.currentTime=a});v.addEventListener('play',()=>{if(v.currentTime<a||v.currentTime>=b)v.currentTime=a});v.addEventListener('timeupdate',()=>{if(v.currentTime>=b){v.pause();v.currentTime=b}})});</script>"
-    has_voiced_preview = plan.get("timebase_kind") == "real_voice_srt" and any(
+    script = "<script>document.querySelectorAll('video[data-start],audio[data-start]').forEach(v=>{const a=Number(v.dataset.start),b=Number(v.dataset.end);v.addEventListener('loadedmetadata',()=>{v.currentTime=a});v.addEventListener('play',()=>{if(v.currentTime<a||v.currentTime>=b)v.currentTime=a});v.addEventListener('timeupdate',()=>{if(v.currentTime>=b){v.pause();v.currentTime=b}})});</script>"
+    has_voiced_preview = bool(audio_source) or plan.get("timebase_kind") == "real_voice_srt" and any(
         (segment.get("preview_binding") or {}).get("preview_media", {}).get("audio_streams", 0) > 0
         for segment in plan["segments"])
     from project_policy import requires_visual_decision
@@ -2135,7 +2145,7 @@ def board_html(root, plan, contract, output):
         preface = ("有声片前预制，非正式成片；动静范围按逐镜记录。请审镜头关系、准确字、阅读与实际运动；正式用户批准另行记录。"
                    if has_voiced_preview else
                    "无声预制 · 原计划与真实媒体同版。请审镜头关系、准确字、阅读与实际运动；正式用户批准和原声制作另行记录。")
-    return "<!doctype html><html lang='zh-CN'><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>"+title+"</title><style>body{font:18px/1.65 system-ui,'Microsoft YaHei',sans-serif;background:#eee9df;color:#27231e;max-width:1050px;margin:auto;padding:22px}section{background:#fffaf1;padding:24px;margin:24px 0;border:1px solid #c7baaa;border-radius:16px}h1,h2{line-height:1.25}.quote{font-size:1.2em;font-weight:650}.frames{display:flex;gap:12px;overflow:auto}figure{margin:0;min-width:180px;max-width:260px}img{width:100%;border-radius:8px}figcaption,.small{font-size:.75em;overflow-wrap:anywhere}video{display:block;width:min(100%,400px);margin:18px auto;background:#111}li{margin:.3em 0}details{font-size:.8em;color:#584b3d}code{overflow-wrap:anywhere}</style><h1>"+title+"</h1><p>"+preface+"</p>"+"".join(sections)+script+"</html>"
+    return "<!doctype html><html lang='zh-CN'><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>"+title+"</title><style>body{font:18px/1.65 system-ui,'Microsoft YaHei',sans-serif;background:#eee9df;color:#27231e;max-width:1050px;margin:auto;padding:22px}section{background:#fffaf1;padding:24px;margin:24px 0;border:1px solid #c7baaa;border-radius:16px}h1,h2{line-height:1.25}.quote{font-size:1.2em;font-weight:650}.frames{display:flex;gap:12px;overflow:auto}figure{margin:0;min-width:180px;max-width:260px}img{width:100%;border-radius:8px}figcaption,.small{font-size:.75em;overflow-wrap:anywhere}video{display:block;width:min(100%,400px);margin:18px auto;background:#111}audio{display:block;width:min(100%,400px);margin:12px auto}li{margin:.3em 0}details{font-size:.8em;color:#584b3d}code{overflow-wrap:anywhere}</style><h1>"+title+"</h1><p>"+preface+"</p>"+"".join(sections)+script+"</html>"
 
 
 def main(argv=None):
