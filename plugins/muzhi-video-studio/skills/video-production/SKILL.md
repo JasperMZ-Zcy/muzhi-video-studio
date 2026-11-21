@@ -11,11 +11,13 @@ description: 牧之远见·视频创作工作室的导演与制作入口。用�
 
 ## 第一步：确认本片风格
 
-使用插件根目录`assets/style-catalog.json`及`scripts/style_registry.py catalog`查看当前风格。先运行`status --project <项目目录>`：有真实风格锁按锁继续；仅有`artifacts/editorial-plugin-state.json`文件，不能证明旧作身份，须核里面已有工作与输入绑定。没有锁时，结合口播任务、受众理解难点和已有素材推荐一种；用户明确指定的优先。一次只为本片选一种主风格，可按镜头需要混用证据/数据/真实动作表达路线，不能把风格和镜头路线混为一谈。
+使用插件根目录`assets/style-catalog.json`及`scripts/style_registry.py catalog`查看当前风格。先运行`status --project <项目目录>`：有真实风格锁按锁继续；仅有`artifacts/editorial-plugin-state.json`文件，不能证明旧作身份，须核里面已有工作与输入绑定。新片未指定风格时，先给选项和一句适用说明，可推荐但须由用户选择；不要默认采用最新风格。用户明确指定则直接进入，不重复问；续片不重选。一次只为本片选一种主风格，可按镜头需要混用证据/数据/真实动作表达路线，不能把风格和镜头路线混为一谈。
 
 用`select --project <项目目录> --style <ID> --mode production|trial --reason <本片理由> --new-project`保存新项目风格锁；已有项目无插件状态也**不等于新项目**，先核已有资产/设计/审批，再改用`--existing-project-reviewed`明确接管。已锁风格需改变时，先说明受影响镜头和原资产，再用`revise --reason`留下旧选择历史；不能悄悄重选或继承上一片临时偏好。新增风格先登记状态、入口、适用边界和独立验收，不能只加一个名字。
 
-当前目录有两种选项：
+当前目录有三种选项：
+
+- **FredTalk 原生讲解** `fredtalk-native`：独立黑白紫知识讲解，适合官方原文、数据、比较与关系解释。选择后转入 [FredTalk 制作入口](../fredtalk-production/SKILL.md)，不执行下面旧路线的 studio/batch/master 作为它的渲染入口。上游源码、组件和Remotion环境另备；缺依赖明确阻断相应动作，不静默改走其他风格。
 
 - **杂志插画** `editorial-illustration`：成熟路径。已锁定的杂志正式片或用户明确选择该专门产线时进入`../magazine-production/SKILL.md`；原37项否决、原批准封面、本人声音和已有锁定版本完整保留。普通新片仍从本入口导演制作。
 - **档案电流拼贴** `archival-current-collage`：有公开风格试镜，可作为新项目的一个选择。进入[拼贴风格参考](references/archival-current-collage.md)和[共用质量底线](references/shared-quality.md)；试镜中的一处关系线偏早，正式片逐镜验收。

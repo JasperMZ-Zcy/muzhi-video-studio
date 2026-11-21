@@ -1,7 +1,17 @@
 {
   "schemaVersion": 1,
-  "catalogVersion": "2026-09-24.1",
+  "catalogVersion": "2026-11-21.fredtalk-native",
   "styles": [
+    {
+      "id": "fredtalk-native",
+      "name": "FredTalk 原生讲解",
+      "status": "production_ready",
+      "bestFor": "黑白紫知识讲解，适合政策原件、数据、比较和关系解释；独立上游环境需另备",
+      "entry": "skills/fredtalk-production/SKILL.md",
+      "qualityProfile": "skills/fredtalk-production/references/quality.md",
+      "workflow": "fredtalk-native",
+      "acceptanceBasis": "已完成并认可一条1080p横屏样片；每条片仍需按自身内容审核，竖屏须重新排版"
+    },
     {
       "id": "editorial-illustration",
       "name": "杂志插画",

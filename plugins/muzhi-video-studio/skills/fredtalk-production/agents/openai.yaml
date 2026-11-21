@@ -1,0 +1,4 @@
+interface:
+  display_name: "FredTalk 原生讲解"
+  short_description: "用独立黑白紫组件做知识讲解，按口播安排动作、原文聚焦和阅读节奏"
+  default_prompt: "用 $fredtalk-production 制作这条已选FredTalk风格的知识视频，先核原稿、本人录音、环境和项目状态，交导演规划。"

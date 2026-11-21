@@ -165,6 +165,8 @@ def main() -> int:
                                 "catalogVersion": data["catalogVersion"], "selectedAt": now(),
                                 "reason": args.reason.strip(),
                                 "projectKind": "new" if args.new_project else "existing_reviewed", "history": []}
+                        if args.style == "fredtalk-native":
+                            item["workflow"] = "fredtalk-native"
                         atomic_create(path, item)
                         result = {"status": "selected", "lock": item, "path": str(path)}
                 else:
@@ -175,6 +177,10 @@ def main() -> int:
                     updated = {**existing, "style": args.style, "mode": args.mode,
                                "catalogVersion": data["catalogVersion"], "selectedAt": now(),
                                "reason": args.reason.strip(), "history": [*existing.get("history", []), previous]}
+                    if args.style == "fredtalk-native":
+                        updated["workflow"] = "fredtalk-native"
+                    elif existing.get("workflow") == "fredtalk-native":
+                        updated.pop("workflow")
                     atomic_replace(path, updated)
                     result = {"status": "revised", "lock": updated, "path": str(path)}
         print(json.dumps(result, ensure_ascii=False, indent=2))

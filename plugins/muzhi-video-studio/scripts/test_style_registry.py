@@ -22,7 +22,7 @@ class StyleRegistryTests(unittest.TestCase):
         code, value = call("catalog")
         self.assertEqual(code, 0)
         self.assertEqual({entry["id"] for entry in value["styles"]},
-                         {"editorial-illustration", "archival-current-collage"})
+                         {"editorial-illustration", "archival-current-collage", "fredtalk-native"})
         with tempfile.TemporaryDirectory() as temp:
             code, value = call("select", "--project", temp, "--style", "archival-current-collage",
                                "--mode", "production", "--reason", "test", "--new-project")
@@ -56,6 +56,38 @@ class StyleRegistryTests(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertEqual(value["status"], "legacy_inferred_no_write")
             self.assertFalse((artifacts / "video-studio-style.json").exists())
+
+    def test_new_project_requires_choice_and_fredtalk_has_its_own_route(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            code, value = call("status", "--project", temp)
+            self.assertEqual(code, 0)
+            self.assertIn("fredtalk-native", value["available"])
+            self.assertFalse((Path(temp)/"artifacts").exists())
+            code, value = call("select", "--project", temp, "--style", "fredtalk-native",
+                               "--mode", "production", "--reason", "user selected native style", "--new-project")
+            self.assertEqual(code, 0)
+            self.assertEqual(value["lock"]["workflow"], "fredtalk-native")
+            lock = Path(temp)/"artifacts/video-studio-style.json"
+            before = lock.read_bytes()
+            code, _ = call("select", "--project", temp, "--style", "editorial-illustration",
+                           "--mode", "production", "--reason", "unapproved silent replacement", "--new-project")
+            self.assertEqual(code, 1)
+            self.assertEqual(lock.read_bytes(), before)
+
+    def test_explicit_style_revision_clears_fredtalk_route_and_preserves_history(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            call("select", "--project", temp, "--style", "archival-current-collage",
+                 "--mode", "production", "--reason", "original choice", "--new-project")
+            code, value = call("revise", "--project", temp, "--style", "fredtalk-native",
+                               "--mode", "production", "--reason", "user explicitly switches")
+            self.assertEqual(code, 0)
+            self.assertEqual(value["lock"]["workflow"], "fredtalk-native")
+            self.assertEqual(value["lock"]["history"][0]["style"], "archival-current-collage")
+            code, value = call("revise", "--project", temp, "--style", "editorial-illustration",
+                               "--mode", "production", "--reason", "user explicitly switches back")
+            self.assertEqual(code, 0)
+            self.assertNotIn("workflow", value["lock"])
+            self.assertEqual(len(value["lock"]["history"]), 2)
 
     def test_existing_project_without_old_state_requires_review(self) -> None:
         with tempfile.TemporaryDirectory() as temp:

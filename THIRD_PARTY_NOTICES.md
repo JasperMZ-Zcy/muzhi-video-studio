@@ -1,5 +1,25 @@
 # Third-party notices
 
+## FredTalk optional native style
+
+The independently authored integration refers to
+[njrhts2kvv-star/FredTalk](https://github.com/njrhts2kvv-star/FredTalk).
+The sample was made with upstream commit
+`59b9e9957957dc9f3fd94ab78f95cec33c29e915`.
+Users obtain its source, selected component packages and rendering environment
+separately. No upstream Skill text, component source archive, font, private
+music, author media, dependency tree or credentials are bundled by this update.
+The upstream project's MIT license does not extend to every third-party
+material or hosted preview.
+
+`docs/assets/showcase/fredtalk-warning.jpg` and
+`fredtalk-verdict.jpg` are stills from a Muzhi sample rendered with adapted
+FredTalk components, Muzhi wording and branding. They are examples of the
+chosen style, not a promise of automatic results. Upstream attribution is
+retained here and its license text is provided at
+`docs/assets/showcase/FREDTALK-UPSTREAM-LICENSE.txt`.
+No sample narration or music is redistributed.
+
 ## video-shotcraft recipe-card text
 
 `plugins/muzhi-video-studio/assets/shotcraft/full-cards/`, the accompanying
